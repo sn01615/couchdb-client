@@ -30,6 +30,7 @@
         "name": "GitHub"
     }],
     "require-dev": {
-        "phpunit/phpunit": "7"
+        "phpunit/phpunit": "7",
+        "sn01615/rand_string": "^1.3"
     }
 }

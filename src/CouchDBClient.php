@@ -1,30 +1,115 @@
 <?php
+
 namespace sn01615;
+
+use Composer\CaBundle\CaBundle;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\RequestOptions;
 
 /**
  *
  * @author YangLong
- * Date: 2018-03-04
+ *
  */
 class CouchDBClient
 {
 
-    private $httpClient, $uri;
+    private $httpClient, $uri, $server;
 
-    public function __construct($uri = 'http://user:pass@127.0.0.1:5984/')
+    private $dbName;
+
+    public function __construct(array $options = [])
     {
-        $this->uri = $uri;
-        
-        $this->httpClient = new \GuzzleHttp\Client([
-            \GuzzleHttp\RequestOptions::VERIFY => \Composer\CaBundle\CaBundle::getSystemCaRootBundlePath()
+        if (!isset($options['server'])) {
+            $this->server = $options['server'] = 'http://127.0.0.1:5984';
+        }
+
+        $this->httpClient = new Client([
+            RequestOptions::VERIFY => CaBundle::getSystemCaRootBundlePath()
         ]);
     }
 
-    public function hello()
+    private function query($method, $url, $data = null)
     {
-        $res = $this->httpClient->request('GET', $this->uri);
-        $response = $res->getBody();
+        $url = trim($url);
+        $url = ltrim($url, '/');
+        $this->uri = $this->server . '/' . $url;
+        try {
+            $options = [
+                RequestOptions::HTTP_ERRORS => false,
+            ];
+            if ($data) {
+                $options[RequestOptions::BODY] = $data;
+            }
+            $res = $this->httpClient->request($method, $this->uri, $options);
+            $response = $res->getBody();
+        } catch (GuzzleException $e) {
+            return false;
+        }
+
         $response = json_decode($response);
+        return $response;
+    }
+
+    public function get($url = '')
+    {
+        $response = $this->query('GET', $url);
+        return $response;
+    }
+
+    public function put($url = '', $data = null)
+    {
+        $response = $this->query('PUT', $url, $data);
+        return $response;
+    }
+
+    public function delete($url = '')
+    {
+        $response = $this->query('DELETE', $url);
+        return $response;
+    }
+
+    public function setDbName($dbName)
+    {
+        if (empty($dbName)) {
+            throw new \LogicException('dbName can not empty');
+        }
+        $this->dbName = $dbName;
+        return $this;
+    }
+
+    public function putDocument($key, \stdClass $document)
+    {
+        if (empty($this->dbName)) {
+            throw new \LogicException('no database select');
+        }
+
+        $key = urlencode($key);
+        $url = $this->dbName . '/' . $key;
+
+        $document = json_encode($document);
+
+        $response = $this->put($url, $document);
+        return $response;
+    }
+
+    public function getDocument($key)
+    {
+        if (empty($this->dbName)) {
+            throw new \LogicException('no database select');
+        }
+
+        $key = urlencode($key);
+        $url = $this->dbName . '/' . $key;
+
+        $response = $this->get($url);
+        return $response;
+    }
+
+    public function getAllDbs()
+    {
+        $response = $this->get('_all_dbs');
         return $response;
     }
 }
