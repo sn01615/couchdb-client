@@ -70,6 +70,43 @@ class CouchDBClientTest extends TestCase
 
         $this->assertEquals($result->_id, $testKey);
 
+        $document = new stdClass();
+        $document->id = 123;
+        $document->text = "hello 中文";
+
+        try {
+            $instance->setDbName($dbName)->updateDocument($testKey, $document);
+        } catch (LogicException $e) {
+            $this->assertEquals($e->getMessage(), 'no _rev set');
+        }
+
+        $document = new stdClass();
+        $document->id = 123;
+        $document->text = "hello 中文";
+        $document->_rev = $result->_rev;
+
+        $result = $instance->setDbName($dbName)->updateDocument($testKey, $document);
+
+        $this->assertNotFalse($result);
+
+        $this->assertEquals($result->ok, true);
+
+        $document = new stdClass();
+        $document->id = 123;
+        $document->text = "hello 中文";
+
+        $result = $instance->setDbName($dbName)->upsertDocument($testKey, $document);
+
+        $this->assertNotFalse($result);
+
+        $this->assertEquals($result->ok, true);
+
+        $result = $instance->setDbName($dbName)->getUiid();
+
+        $this->assertNotFalse($result);
+
+        $this->assertNotFalse($result->uuids);
+
         $result = $instance->delete($dbName);
 
         $this->assertNotFalse($result);

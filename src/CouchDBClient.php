@@ -94,6 +94,27 @@ class CouchDBClient
         return $response;
     }
 
+    public function updateDocument($key, \stdClass $document)
+    {
+        if (empty($document->_rev)) {
+            throw new \LogicException('no _rev set');
+        }
+
+        return $this->putDocument($key, $document);
+    }
+
+    public function upsertDocument($key, \stdClass $document)
+    {
+        $result = $this->putDocument($key, $document);
+        if ($result && $result->error == 'conflict') {
+            $result = $this->getDocument($key);
+            if ($result) {
+                $document->_rev = $result->_rev;
+            }
+        }
+        return $this->putDocument($key, $document);
+    }
+
     public function getDocument($key)
     {
         if (empty($this->dbName)) {
@@ -103,6 +124,13 @@ class CouchDBClient
         $key = urlencode($key);
         $url = $this->dbName . '/' . $key;
 
+        $response = $this->get($url);
+        return $response;
+    }
+
+    public function getUiid()
+    {
+        $url = '_uuids';
         $response = $this->get($url);
         return $response;
     }
