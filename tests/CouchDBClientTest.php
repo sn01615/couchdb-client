@@ -9,11 +9,13 @@ class CouchDBClientTest extends TestCase
 
     public function testHello(): void
     {
-        $instance = new CouchDBClient();
+        $client = new CouchDBClient([
+            'server' => 'http://127.0.0.1:5984'
+        ]);
 
-        $this->assertInstanceOf(CouchDBClient::class, $instance);
+        $this->assertInstanceOf(CouchDBClient::class, $client);
 
-        $version = $instance->get();
+        $version = $client->get();
 
         $this->assertNotFalse($version);
 

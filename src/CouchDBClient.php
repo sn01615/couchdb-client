@@ -22,8 +22,9 @@ class CouchDBClient
     public function __construct(array $options = [])
     {
         if (!isset($options['server'])) {
-            $this->server = $options['server'] = 'http://127.0.0.1:5984';
+            $options['server'] = 'http://127.0.0.1:5984';
         }
+        $this->server = $options['server'];
 
         $this->httpClient = new Client([
             RequestOptions::VERIFY => CaBundle::getSystemCaRootBundlePath()
@@ -34,6 +35,7 @@ class CouchDBClient
     {
         $url = trim($url);
         $url = ltrim($url, '/');
+        $this->server = trim($this->server, '/');
         $this->uri = $this->server . '/' . $url;
         try {
             $options = [
