@@ -6,6 +6,8 @@ use Composer\CaBundle\CaBundle;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
+use LogicException;
+use stdClass;
 
 /**
  *
@@ -75,16 +77,16 @@ class CouchDBClient
     public function setDbName($dbName)
     {
         if (empty($dbName)) {
-            throw new \LogicException('dbName can not empty');
+            throw new LogicException('dbName can not empty');
         }
         $this->dbName = $dbName;
         return $this;
     }
 
-    public function putDocument($key, \stdClass $document)
+    public function putDocument($key, stdClass $document)
     {
         if (empty($this->dbName)) {
-            throw new \LogicException('no database select');
+            throw new LogicException('no database select');
         }
 
         $key = urlencode($key);
@@ -96,16 +98,16 @@ class CouchDBClient
         return $response;
     }
 
-    public function updateDocument($key, \stdClass $document)
+    public function updateDocument($key, stdClass $document)
     {
         if (empty($document->_rev)) {
-            throw new \LogicException('no _rev set');
+            throw new LogicException('no _rev set');
         }
 
         return $this->putDocument($key, $document);
     }
 
-    public function upsertDocument($key, \stdClass $document)
+    public function upsertDocument($key, stdClass $document)
     {
         $result = $this->putDocument($key, $document);
         if ($result && $result->error == 'conflict') {
@@ -120,7 +122,7 @@ class CouchDBClient
     public function getDocument($key)
     {
         if (empty($this->dbName)) {
-            throw new \LogicException('no database select');
+            throw new LogicException('no database select');
         }
 
         $key = urlencode($key);
